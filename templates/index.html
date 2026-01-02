@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>급식 입장 현황</title>
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    .count { font-size: 2em; margin: 10px; }
+  </style>
+</head>
+<body>
+  <!-- 이 페이지는 실시간으로 학년별 입장 인원수를 보여줍니다. -->
+  <!-- 초보자 설명: 서버에서 보낸 숫자를 받아서 화면에 바로 갱신합니다. -->
+  <h1>🍽️ 급식 입장 현황</h1>
+  <div class="count">1학년: <span id="g1">0</span>명</div>
+  <div class="count">2학년: <span id="g2">0</span>명</div>
+  <div class="count">3학년: <span id="g3">0</span>명</div>
+
+  <!-- 아래 스크립트는 서버와 소켓 연결을 만들고
+       서버가 보내는 'update_counts' 메시지를 받아서
+       각 학년의 숫자를 화면에 넣어줍니다. -->
+  <script>
+    // 소켓을 통해 서버와 연결합니다.
+    const socket = io();
+
+    // 안전하게 값을 꺼내는 작은 도움 함수입니다.
+    function v(data, k){ return (data[k] !== undefined) ? data[k] : (data[String(k)] !== undefined ? data[String(k)] : 0); }
+
+    // 서버가 보낸 인원수 업데이트를 받으면 화면을 바꿉니다.
+    socket.on('update_counts', data => {
+      const a = v(data, 1);
+      const b = v(data, 2);
+      const c = v(data, 3);
+      document.getElementById('g1').textContent = a;
+      document.getElementById('g2').textContent = b;
+      document.getElementById('g3').textContent = c;
+    });
+  </script>
+</body>
+</html>

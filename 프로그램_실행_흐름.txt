@@ -1,0 +1,76 @@
+프로그램 실행 흐름 (초보자용, 쉬운 말)
+
+1) 전체 개요
+- 이 프로젝트는 두 부분으로 나뉩니다:
+  a) 스캐너: `scanner.py`는 카메라로 바코드를 읽고 결과를 엑셀에 저장합니다.
+  b) 웹 표시: `app.py`는 엑셀을 읽어 웹 페이지(`templates/index.html`)에 실시간으로 인원수를 보여줍니다.
+
+2) 파일 역할 간단 정리
+- `scanner.py`: 카메라에서 바코드를 스캔합니다. 새로 읽은 값은 `entries.xlsx`에 한 줄로 저장됩니다.
+  - 스캔한 값은 `student_id`, `timestamp`, `type`, `data` 순서로 저장됩니다.
+  - 'c' 키를 누르면 스캔 기록을 초기화(엑셀 헤더만 남김)합니다.
+  - ESC 또는 'q'로 프로그램을 종료합니다.
+  - `mappings.json`이 있으면 특정 코드 값을 사람이 보기 좋은 이름으로 바꿔 보여줍니다.
+
+- `entries.xlsx`: 스캐너가 기록하는 엑셀 파일입니다. `app.py`가 이 파일을 읽어 학년별 인원수를 셉니다.
+  - 헤더: student_id, timestamp, type, data
+
+- `app.py`: 엑셀을 주기적으로 확인하고(기본 2초마다), 1/2/3학년별 인원 수를 계산합니다.
+  - Windows에서 Excel이 열려 있으면(저장하지 않은 변경 포함) COM을 통해 최신 값을 읽으려고 시도합니다.
+  - 변경이 있으면 웹 클라이언트에 소켓(`socket.io`)으로 `update_counts` 메시지를 보냅니다.
+
+- `templates/index.html`: 브라우저에서 보여지는 페이지입니다.
+  - 서버에서 보내는 숫자를 받아 화면의 1/2/3학년 숫자를 바꿉니다.
+
+3) 실행 순서 (권장 테스트 방법)
+- 1단계: 필요한 패키지 설치 (프로젝트 폴더에서)
+  - Windows PowerShell이나 CMD에서:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+- 2단계: 웹 서버 실행 (`app.py`)
+  - 같은 폴더에서:
+
+```powershell
+python app.py
+```
+
+  - 실행 후 브라우저에서 `http://localhost:5000`로 접속하면 실시간 인원 수 페이지가 보입니다.
+
+- 3단계: 스캐너 실행 (다른 터미널에서)
+  - 카메라 장치 인덱스가 기본이면 그냥 실행:
+
+```powershell
+python scanner.py
+```
+
+  - 필요하면 카메라 번호를 넣거나, 소리를 끌 수 있습니다:
+
+```powershell
+python scanner.py 0 true     # 카메라 0, 비프음 켬
+python scanner.py 1 false    # 카메라 1, 비프음 끔
+python scanner.py --debug    # 디버그 로그 출력
+```
+
+- 4단계: 동작 확인
+  - 스캐너가 바코드를 읽어 `entries.xlsx`에 기록하면, `app.py`가 이를 읽어 웹페이지 숫자를 갱신합니다.
+  - Excel 파일이 열려 있어도(편집 중) `app.py`는 가능한 경우 저장하지 않은 값까지 읽어와 갱신합니다.
+
+4) 자주 쓰는 키
+- `scanner.py` 실행 창에서:
+  - 'c' 키: 스캔 기록 초기화(엑셀 내용 삭제, 헤더만 남김)
+  - ESC 또는 'q': 프로그램 종료
+
+5) 문제 생기면 확인할 것
+- 카메라가 열리지 않음: 카메라 인덱스가 잘못되었거나 다른 프로그램에서 카메라를 사용 중인지 확인하세요.
+- 웹에 숫자가 안 보임: `app.py`가 실행 중인지, 브라우저 콘솔이나 서버 로그에 에러가 있는지 확인하세요.
+- 패키지 관련 에러: `requirements.txt`로 설치했는지 확인하고, Python 버전(권장: 3.8~3.11)을 확인하세요.
+
+6) 간단 요약
+- `scanner.py`가 찍어서 `entries.xlsx`에 저장합니다.
+- `app.py`가 `entries.xlsx`를 읽어 웹에 실시간으로 보여줍니다.
+- 브라우저에서 `http://localhost:5000`에 접속하세요.
+
+끝.
